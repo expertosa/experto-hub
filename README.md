@@ -25,12 +25,13 @@ packages/orchestrator            server-only routing and service calls
   interpret + route              one service per request
   identity                       Experto session placeholder
   services/experto.ts            assistant entry stub
-  services/abeet.ts              first HTTP backend
-  services/studio.ts             video, after Abeet
+  services/studio.ts             first HTTP backend (video)
   services/marketer.ts           campaigns, after Studio
 ```
 
-Launch order in the code matches the projects: Experto assistant, then Abeet, then Studio video, then Marketeer.
+Launch order: Experto assistant, then Studio video, then Marketeer.
+
+Owner removed Abeet from Intent Hub on 2026-11-02.
 
 ### Projects
 
@@ -39,11 +40,10 @@ Each service stores `id`, `labelAr`, `opportunityId`, `opportunityUrl`, and an o
 | Service | Arabic | Opportunity Explorer | Public |
 | --- | --- | --- | --- |
 | experto | إكسبرتو | https://experto.sa/ar/admin/opportunities/6d17a9b9-7780-4f8e-9e63-dddb0e70680d | https://experto.sa (TestFlight https://testflight.apple.com/join/RzTNGVph) |
-| abeet | أبيت | https://experto.sa/ar/admin/opportunities/2a3ff790-3aac-402e-9439-c3b1ade2d37a | https://abeet.ai |
 | studio | استوديو فيديو | https://experto.sa/ar/admin/opportunities/18d6d182-fb15-457c-97ba-5f1ca0be9271 | https://video.opps.dev |
 | marketer | ماركتير | https://experto.sa/ar/admin/opportunities/e8f44802-d2f5-4eb0-bb79-dea19eb54c85 | https://marketeer.opps.dev |
 
-Repos, for operators: [Abeet](https://github.com/expertosa/Abeet), [video-order-site](https://github.com/expertosa/video-order-site), [marketeer](https://github.com/expertosa/marketeer).
+Repos, for operators: [video-order-site](https://github.com/expertosa/video-order-site), [marketeer](https://github.com/expertosa/marketeer).
 
 A related pipeline note, not a fifth product: https://experto.sa/ar/admin/opportunities/2fb88efa-cc4a-4d98-a866-56034ad73de1
 
@@ -57,35 +57,34 @@ An explicit service chip wins. Otherwise:
 | --- | --- | --- |
 | Video, reel, or output «فيديو» | استوديو فيديو | فيديو وإعلانات فيديو |
 | Campaign or marketing, and not a video | ماركتير | تسويق وحملات |
-| Property, brokerage, or property management | أبيت | عقارات / إدارة أملاك / وساطة |
 
-A video ad for a property goes to Studio because the deliverable is a video. A marketing campaign about property goes to Marketeer. A generic «أبي موقع» with no chosen project is rejected in Arabic. v0 does not invent a website generator.
+A generic «أبي موقع» with no chosen project is rejected in Arabic. v0 does not invent a website generator.
 
 ### Service contract
 
-When `ABEET_API_BASE_URL`, `STUDIO_API_BASE_URL`, or `MARKETER_API_BASE_URL` is set, the orchestrator calls:
+When `STUDIO_API_BASE_URL` or `MARKETER_API_BASE_URL` is set, the orchestrator calls:
 
 ```text
 POST {BASE}/v0/intent-jobs
 GET  {BASE}/v0/intent-jobs/{serviceJobId}
 ```
 
-The JSON body includes `source: "experto-intent-hub"`, the Arabic text, an output kind, a service-specific `kind`, and the Experto identity claim (`mode`, `authenticated`, `subject`). The server adds `Authorization: Bearer ${EXPERTO_SERVICE_TOKEN}` only when that variable is set. The browser session cookie is sent to Experto identity, not to Abeet, Studio, or Marketer.
+The JSON body includes `source: "experto-intent-hub"`, the Arabic text, an output kind, a service-specific `kind`, and the Experto identity claim (`mode`, `authenticated`, `subject`). The server adds `Authorization: Bearer ${EXPERTO_SERVICE_TOKEN}` only when that variable is set. The browser session cookie is sent to Experto identity, not to Studio or Marketeer.
 
 A successful service response:
 
 ```json
 {
-  "serviceJobId": "abeet_123",
+  "serviceJobId": "studio_123",
   "status": "queued",
   "previewUrl": null,
-  "messageAr": "استلم أبيت الطلب"
+  "messageAr": "استلم الاستوديو الطلب"
 }
 ```
 
 `status` is `stub`, `queued`, `ready`, or `failed`. Any other shape is a failure. `previewUrl` must be `http`, `https`, or a same-app path.
 
-Abeet `kind` is `brokerage`, `property_management`, `listing`, or `general_real_estate`. Studio `kind` is `video` or `video_ad`. Marketer `kind` is `campaign`.
+Studio `kind` is `video` or `video_ad`. Marketer `kind` is `campaign`.
 
 If the base URL is empty, the adapter returns an in-memory stub job and a preview card at `/preview/{hubJobId}`. The card says the link is a stub. If the base URL is set but invalid, the request fails and is not silently stubbed.
 
@@ -99,6 +98,7 @@ v0 does not add a new login product. Identity uses these names only:
 - `EXPERTO_IDENTITY_AUDIENCE` (default `experto-intent-hub`)
 - `EXPERTO_SESSION_COOKIE_NAME` (default `experto_session`)
 - `EXPERTO_SERVICE_TOKEN`
+- `EXPERTO_API_TIMEOUT_MS` (default 8000)
 
 Leave `EXPERTO_IDENTITY_URL` empty to try the screen locally. The identity mode is then `placeholder` and no session is invented. When the URL is set, a missing or rejected Experto session stops the request with an Arabic error.
 
@@ -118,8 +118,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Try:
 
-- «وساطة شقة في جدة» → أبيت، حالة تجريبي، with the Abeet explorer link in the thread
-- فيديو with no extra text → استوديو فيديو
+- فيديو with no extra text → استوديو فيديو، حالة تجريبي، with the explorer link in the thread
 - «حملة تسويق لافتتاح» → ماركتير
 - «أبي موقع» with no project chip → Arabic error and retry inside the chat
 
@@ -127,8 +126,8 @@ Try:
 
 ## Out of scope
 
-Billing, a multi-tenant IDE, generation quality, new product brands, the Abeet office UI, Experto mobile home chips, and a website taxonomy.
+Billing, a multi-tenant IDE, generation quality, new product brands, Experto mobile home chips, and a website taxonomy.
 
 ## Tests
 
-Orchestrator tests live in `packages/orchestrator/test`. They cover routing, the Abeet HTTP contract, honest stubs, and failed calls. They do not need network access or real secrets.
+Orchestrator tests live in `packages/orchestrator/test`. They cover routing, the Studio HTTP contract, honest stubs, and failed calls. They do not need network access or real secrets.

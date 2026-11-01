@@ -31,7 +31,7 @@ function stub(input: ServiceSubmitInput): ServiceSubmitOutput {
   };
 }
 
-/** Studio is wired after Abeet. Same HTTP contract, local stub until STUDIO_API_BASE_URL is set. */
+/** Studio is the first HTTP backend. Local stub until STUDIO_API_BASE_URL is set. */
 export function createStudioAdapter(config: OrchestratorConfig): ServiceAdapter {
   return {
     id: "studio",

@@ -204,9 +204,6 @@ export function IntentScreen() {
           </button>
         </div>
         <div className="chips" role="group" aria-label="الخدمات">
-          <button type="button" className="chip" aria-pressed={service === "abeet"} onClick={() => chooseService("abeet")}>
-            أبيت
-          </button>
           <button type="button" className="chip" aria-pressed={service === "marketer"} onClick={() => chooseService("marketer")}>
             تسويق
           </button>

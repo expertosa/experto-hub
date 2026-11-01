@@ -24,16 +24,12 @@ function testConfig(overrides: Partial<OrchestratorConfig> = {}): OrchestratorCo
 }
 
 describe("routeIntent", () => {
-  const cases: Array<{ name: string; value: IntentInput; service: "abeet" | "studio" | "marketer" | null }> = [
-    { name: "brokerage copy routes to Abeet", value: input({ output: "website", freeText: "وساطة شقة في جدة" }), service: "abeet" },
-    { name: "property management app routes to Abeet", value: input({ output: "app", freeText: "تطبيق لإدارة الأملاك" }), service: "abeet" },
-    { name: "adjective عقاري still routes to Abeet", value: input({ output: "website", freeText: "موقع عقاري في الرياض" }), service: "abeet" },
+  const cases: Array<{ name: string; value: IntentInput; service: "studio" | "marketer" | null }> = [
     { name: "video output alone routes to Studio", value: input({ output: "video", freeText: "" }), service: "studio" },
-    { name: "property video ad routes to Studio", value: input({ freeText: "فيديو إعلان لعقار في الخبر" }), service: "studio" },
+    { name: "video ad routes to Studio", value: input({ freeText: "فيديو إعلان للمنتج" }), service: "studio" },
     { name: "campaign routes to Marketer", value: input({ freeText: "حملة تسويق لافتتاح الفرع" }), service: "marketer" },
-    { name: "real-estate campaign stays with Marketer", value: input({ output: "website", freeText: "حملة تسويق لعقارات الرياض" }), service: "marketer" },
+    { name: "a property sentence with no video or campaign is not routed", value: input({ output: "website", freeText: "وساطة شقة في جدة" }), service: null },
     { name: "generic website is not a fake builder job", value: input({ output: "website", freeText: "أبي موقع" }), service: null },
-    { name: "معارض does not match أرض", value: input({ freeText: "أبي موقع معارض" }), service: null },
   ];
 
   for (const testCase of cases) {
@@ -70,7 +66,7 @@ describe("submitIntent routing outcomes", () => {
     let called = false;
     const orchestrator = createOrchestrator(
       testConfig({
-        abeetBaseUrl: "https://abeet.example",
+        studioBaseUrl: "https://studio.example",
         fetchImpl: async () => {
           called = true;
           throw new Error("no");
@@ -84,31 +80,31 @@ describe("submitIntent routing outcomes", () => {
     assert.equal(result.ok, false);
     if (!result.ok) {
       assert.equal(result.error.code, "unroutable");
-      assert.match(result.error.messageAr, /عقار/);
+      assert.match(result.error.messageAr, /استوديو فيديو/);
       assert.equal(result.job, undefined);
     }
     assert.equal(called, false);
   });
 
-  it("keeps a local Abeet stub honest", async () => {
+  it("keeps a local Studio stub honest", async () => {
     const orchestrator = createOrchestrator(testConfig());
     const result = await orchestrator.submitIntent(
-      { output: "website", freeText: "وساطة شقة في جدة", description: "غرفة وصالة" },
+      { output: "video", freeText: "عرض المنتج", description: "١٥ ثانية" },
       { cookieHeader: null },
     );
     assert.equal(result.ok, true);
     if (result.ok) {
-      assert.equal(result.job.service, "abeet");
-      assert.equal(result.job.serviceLabelAr, "أبيت");
-      assert.equal(result.job.opportunityId, "2a3ff790-3aac-402e-9439-c3b1ade2d37a");
+      assert.equal(result.job.service, "studio");
+      assert.equal(result.job.serviceLabelAr, "استوديو فيديو");
+      assert.equal(result.job.opportunityId, "18d6d182-fb15-457c-97ba-5f1ca0be9271");
       assert.equal(
         result.job.opportunityUrl,
-        "https://experto.sa/ar/admin/opportunities/2a3ff790-3aac-402e-9439-c3b1ade2d37a",
+        "https://experto.sa/ar/admin/opportunities/18d6d182-fb15-457c-97ba-5f1ca0be9271",
       );
       assert.equal(result.job.status, "stub");
       assert.notEqual(result.job.status, "ready");
       assert.equal(result.job.remote, false);
-      assert.match(result.job.serviceJobId ?? "", /^abeet_/);
+      assert.match(result.job.serviceJobId ?? "", /^studio_/);
       assert.match(result.job.previewUrl ?? "", /^\/preview\/hub_/);
       assert.match(result.job.messageAr, /تجريب/);
       const stored = await orchestrator.getJob(result.job.id);
@@ -143,7 +139,7 @@ describe("submitIntent routing outcomes", () => {
     const orchestrator = createOrchestrator(
       testConfig({
         identityUrl: "https://identity.example/v1",
-        abeetBaseUrl: "https://abeet.example",
+        studioBaseUrl: "https://studio.example",
         fetchImpl: async () => {
           called = true;
           throw new Error("no");
@@ -151,7 +147,7 @@ describe("submitIntent routing outcomes", () => {
       }),
     );
     const result = await orchestrator.submitIntent(
-      { output: "app", freeText: "إدارة أملاك", description: "" },
+      { output: "video", freeText: "فيديو تعريفي", description: "" },
       { cookieHeader: null },
     );
     assert.equal(result.ok, false);
@@ -191,33 +187,33 @@ describe("submitIntent routing outcomes", () => {
   it("lets a chosen project chip override a vague sentence", async () => {
     const orchestrator = createOrchestrator(testConfig());
     const result = await orchestrator.submitIntent(
-      { output: "website", service: "abeet", freeText: "أبي موقع", description: "" },
+      { output: "website", service: "studio", freeText: "أبي موقع", description: "" },
       { cookieHeader: null },
     );
     assert.equal(result.ok, true);
     if (result.ok) {
-      assert.equal(result.job.service, "abeet");
+      assert.equal(result.job.service, "studio");
       assert.equal(result.job.status, "stub");
-      assert.match(result.job.reasonAr, /أبيت/);
+      assert.match(result.job.reasonAr, /استوديو فيديو/);
     }
   });
 });
 
 describe("service catalog", () => {
-  it("lists the four Experto projects in launch order with explorer links", () => {
+  it("lists the Experto projects in launch order with explorer links", () => {
     assert.deepEqual(
       SERVICE_CATALOG.map((service) => service.id),
-      ["experto", "abeet", "studio", "marketer"],
+      ["experto", "studio", "marketer"],
     );
-    assert.equal(SERVICE_CATALOG[2]?.labelAr, "استوديو فيديو");
-    assert.equal(SERVICE_CATALOG[2]?.publicUrl, "https://video.opps.dev");
+    assert.equal(SERVICE_CATALOG[1]?.labelAr, "استوديو فيديو");
+    assert.equal(SERVICE_CATALOG[1]?.publicUrl, "https://video.opps.dev");
     assert.equal(
-      SERVICE_CATALOG[2]?.opportunityUrl,
+      SERVICE_CATALOG[1]?.opportunityUrl,
       "https://experto.sa/ar/admin/opportunities/18d6d182-fb15-457c-97ba-5f1ca0be9271",
     );
-    assert.equal(SERVICE_CATALOG[3]?.labelAr, "ماركتير");
+    assert.equal(SERVICE_CATALOG[2]?.labelAr, "ماركتير");
     assert.equal(
-      SERVICE_CATALOG[3]?.opportunityUrl,
+      SERVICE_CATALOG[2]?.opportunityUrl,
       "https://experto.sa/ar/admin/opportunities/e8f44802-d2f5-4eb0-bb79-dea19eb54c85",
     );
   });
@@ -230,17 +226,15 @@ describe("configFromEnv", () => {
       EXPERTO_IDENTITY_AUDIENCE: "experto-intent-hub",
       EXPERTO_SESSION_COOKIE_NAME: "experto_session",
       EXPERTO_SERVICE_TOKEN: "token-placeholder",
-      ABEET_API_BASE_URL: "https://abeet.example",
-      STUDIO_API_BASE_URL: "  ",
+      STUDIO_API_BASE_URL: "https://studio.example",
       MARKETER_API_BASE_URL: "",
-      ABEET_API_TIMEOUT_MS: "1500",
+      EXPERTO_API_TIMEOUT_MS: "1500",
     });
     assert.equal(config.identityUrl, "https://identity.example");
     assert.equal(config.identityAudience, "experto-intent-hub");
     assert.equal(config.sessionCookieName, "experto_session");
     assert.equal(config.serviceToken, "token-placeholder");
-    assert.equal(config.abeetBaseUrl, "https://abeet.example");
-    assert.equal(config.studioBaseUrl, undefined);
+    assert.equal(config.studioBaseUrl, "https://studio.example");
     assert.equal(config.marketerBaseUrl, undefined);
     assert.equal(config.timeoutMs, 1500);
   });

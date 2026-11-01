@@ -22,14 +22,6 @@ export const SERVICE_CATALOG: readonly ServiceMeta[] = [
     testflightUrl: "https://testflight.apple.com/join/RzTNGVph",
   },
   {
-    id: "abeet",
-    labelAr: "أبيت",
-    detailAr: "عقارات، إدارة أملاك، ووساطة.",
-    opportunityId: "2a3ff790-3aac-402e-9439-c3b1ade2d37a",
-    opportunityUrl: "https://experto.sa/ar/admin/opportunities/2a3ff790-3aac-402e-9439-c3b1ade2d37a",
-    publicUrl: "https://abeet.ai",
-  },
-  {
     id: "studio",
     labelAr: "استوديو فيديو",
     detailAr: "فيديو وإعلانات فيديو.",

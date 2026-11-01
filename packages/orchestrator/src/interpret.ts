@@ -1,27 +1,6 @@
 import { hasTerm } from "./text";
 import type { IntentInput, InterpretedIntent } from "./types";
 
-const REAL_ESTATE_TERMS = [
-  "عقار",
-  "عقارات",
-  "أملاك",
-  "وساطة",
-  "وسيط",
-  "إيجار",
-  "للبيع",
-  "للشراء",
-  "شقة",
-  "فيلا",
-  "أرض",
-  "مستأجر",
-  "مكتب عقاري",
-  "عقاري",
-  "عقارية",
-  "أراضي",
-  "property",
-  "brokerage",
-];
-
 const VIDEO_TERMS = [
   "فيديو",
   "مقطع",
@@ -63,7 +42,6 @@ export function interpretIntent(input: IntentInput): InterpretedIntent {
     output: input.output,
     text,
     signals: {
-      realEstate: REAL_ESTATE_TERMS.some((term) => hasTerm(text, term)),
       video: input.output === "video" || VIDEO_TERMS.some((term) => hasTerm(text, term)),
       marketing: MARKETING_TERMS.some((term) => hasTerm(text, term)),
     },

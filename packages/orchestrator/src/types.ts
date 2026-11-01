@@ -1,7 +1,7 @@
 export const OUTPUTS = ["website", "video", "app"] as const;
 export type OutputKind = (typeof OUTPUTS)[number];
 
-export const SERVICE_IDS = ["experto", "abeet", "studio", "marketer"] as const;
+export const SERVICE_IDS = ["experto", "studio", "marketer"] as const;
 export type ServiceId = (typeof SERVICE_IDS)[number];
 
 export const JOB_STATUSES = ["stub", "queued", "ready", "failed"] as const;
@@ -25,7 +25,6 @@ export interface IntentInput {
 }
 
 export interface IntentSignals {
-  realEstate: boolean;
   video: boolean;
   marketing: boolean;
 }
@@ -85,7 +84,6 @@ export interface OrchestratorConfig {
   identityAudience: string;
   sessionCookieName: string;
   serviceToken?: string;
-  abeetBaseUrl?: string;
   studioBaseUrl?: string;
   marketerBaseUrl?: string;
   timeoutMs: number;
