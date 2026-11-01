@@ -35,6 +35,11 @@ export function JobCard({ job, linkPreview = true }: { job: PublicJob; linkPrevi
       </dl>
       <p>{job.messageAr}</p>
       <p className="quiet">{job.reasonAr}</p>
+      <p>
+        <a className="explorer" href={job.opportunityUrl}>
+          {job.opportunityUrl}
+        </a>
+      </p>
       {job.summaryAr ? (
         <div className="preview">
           <div className="kicker">ملخص الطلب</div>

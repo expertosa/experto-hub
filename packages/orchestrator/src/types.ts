@@ -1,7 +1,7 @@
 export const OUTPUTS = ["website", "video", "app"] as const;
 export type OutputKind = (typeof OUTPUTS)[number];
 
-export const SERVICE_IDS = ["abeet", "studio", "marketer"] as const;
+export const SERVICE_IDS = ["experto", "abeet", "studio", "marketer"] as const;
 export type ServiceId = (typeof SERVICE_IDS)[number];
 
 export const JOB_STATUSES = ["stub", "queued", "ready", "failed"] as const;
@@ -18,6 +18,8 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 export interface IntentInput {
   output: OutputKind | null;
+  /** Set when the person picks a project chip. Null lets routing decide. */
+  service: ServiceId | null;
   freeText: string;
   description: string;
 }
@@ -54,6 +56,10 @@ export interface PublicJob {
   id: string;
   service: ServiceId;
   serviceLabelAr: string;
+  opportunityId: string;
+  opportunityUrl: string;
+  publicUrl: string | null;
+  testflightUrl: string | null;
   serviceJobId: string | null;
   status: JobStatus;
   /** True only after a real HTTP backend accepted or rejected the call. */

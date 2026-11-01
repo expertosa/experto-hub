@@ -2,6 +2,7 @@ import { resolveExpertoIdentity } from "./identity";
 import { interpretIntent } from "./interpret";
 import { createJobStore, type JobStore } from "./jobs";
 import { routeIntent } from "./route";
+import { serviceById } from "./services/catalog";
 import { createServiceRegistry } from "./services/registry";
 import type { ServiceSubmitOutput } from "./services/types";
 import type { IdentityContext, IntentInput, OrchestratorConfig, OutputKind, PublicJob, SubmitResult } from "./types";
@@ -34,6 +35,10 @@ function toPublicJob(
     id: hubJobId,
     service,
     serviceLabelAr: labelAr,
+    opportunityId: serviceById(service).opportunityId,
+    opportunityUrl: serviceById(service).opportunityUrl,
+    publicUrl: serviceById(service).publicUrl ?? null,
+    testflightUrl: serviceById(service).testflightUrl ?? null,
     serviceJobId: output.serviceJobId,
     status: failed ? "failed" : output.status,
     remote: output.remote,
@@ -73,7 +78,7 @@ export function createOrchestrator(config: OrchestratorConfig, store: JobStore =
       if (!identity.ok) return identity;
 
       const intent = interpretIntent(validated.value);
-      const decision = routeIntent(intent);
+      const decision = routeIntent(intent, validated.value.service);
       if (!decision.service) {
         return { ok: false, error: { code: "unroutable", messageAr: decision.reasonAr } };
       }

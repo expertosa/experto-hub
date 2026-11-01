@@ -8,36 +8,58 @@ v0 is a local MVP. Do not merge it to production, publish it, or deploy it until
 
 ## What v0 does
 
-1. The person picks an output (موقع، فيديو، تطبيق) or writes a free-text request, plus a short description.
-2. The browser posts that to the Next.js server. No service key is ever sent to the browser.
-3. The orchestrator reads the intent, chooses one service, and returns a hub job id, the service job id, a status, and either a preview or an Arabic error.
-4. Failures stay failures. A local stub is labeled `stub`. An HTTP error, a bad payload, or an unreachable service is `failed` with a retry. Nothing is marked ready unless that service said so.
+1. The screen is an Arabic RTL chat, in the shape of the Experto assistant: a thread, quick chips, and a composer stuck to the bottom.
+2. The person picks an output (موقع، فيديو، تطبيق) or one of the real projects, and writes a request plus an optional short description.
+3. The browser posts that to the Next.js server. No service key is ever sent to the browser.
+4. The orchestrator reads the intent, chooses one service, and returns a hub job id, the service job id, a status, and either a preview or an Arabic error inside the thread.
+5. Failures stay failures. A local stub is labeled `stub`. An HTTP error, a bad payload, or an unreachable service is `failed` with a retry. Nothing is marked ready unless that service said so.
 
 ## Architecture
 
 ```text
-apps/web                         Arabic RTL UI (Next.js)
+apps/web                         Arabic RTL chat (Next.js)
   app/api/intents                POST intent
   app/api/jobs/[id]              GET status (polls upstream only when queued)
 packages/orchestrator            server-only routing and service calls
+  services/catalog.ts            project metadata and Opportunity Explorer URLs
   interpret + route              one service per request
   identity                       Experto session placeholder
-  services/abeet                 first wired backend
-  services/studio                video, after Abeet
-  services/marketer              campaigns, after Studio
+  services/experto.ts            assistant entry stub
+  services/abeet.ts              first HTTP backend
+  services/studio.ts             video, after Abeet
+  services/marketer.ts           campaigns, after Studio
 ```
 
-Launch order in the code matches the product order: the Experto entry and the orchestrator skeleton, then Abeet, then Studio, then Marketer.
+Launch order in the code matches the projects: Experto assistant, then Abeet, then Studio video, then Marketeer.
+
+### Projects
+
+Each service stores `id`, `labelAr`, `opportunityId`, `opportunityUrl`, and an optional `publicUrl`. The chat shows the Opportunity Explorer URL when a chip is opened and again when a job is routed.
+
+| Service | Arabic | Opportunity Explorer | Public |
+| --- | --- | --- | --- |
+| experto | إكسبرتو | https://experto.sa/ar/admin/opportunities/6d17a9b9-7780-4f8e-9e63-dddb0e70680d | https://experto.sa (TestFlight https://testflight.apple.com/join/RzTNGVph) |
+| abeet | أبيت | https://experto.sa/ar/admin/opportunities/2a3ff790-3aac-402e-9439-c3b1ade2d37a | https://abeet.ai |
+| studio | استوديو فيديو | https://experto.sa/ar/admin/opportunities/18d6d182-fb15-457c-97ba-5f1ca0be9271 | https://video.opps.dev |
+| marketer | ماركتير | https://experto.sa/ar/admin/opportunities/e8f44802-d2f5-4eb0-bb79-dea19eb54c85 | https://marketeer.opps.dev |
+
+Repos, for operators: [Abeet](https://github.com/expertosa/Abeet), [video-order-site](https://github.com/expertosa/video-order-site), [marketeer](https://github.com/expertosa/marketeer).
+
+A related pipeline note, not a fifth product: https://experto.sa/ar/admin/opportunities/2fb88efa-cc4a-4d98-a866-56034ad73de1
+
+Arabic RTL design references live with MCP designs: https://experto.sa/ar/admin/opportunities/835a436a-2f3f-4fa5-b520-db95cbbb2c92
 
 ### Routing
 
+An explicit service chip wins. Otherwise:
+
 | Signal | Service | Domain |
 | --- | --- | --- |
-| Video, reel, or output «فيديو» | Studio | فيديو وإعلانات فيديو |
-| Campaign or marketing, and not a video | Marketer | تسويق وحملات |
-| Property, brokerage, or property management | Abeet | عقارات / إدارة أملاك / وساطة |
+| Video, reel, or output «فيديو» | استوديو فيديو | فيديو وإعلانات فيديو |
+| Campaign or marketing, and not a video | ماركتير | تسويق وحملات |
+| Property, brokerage, or property management | أبيت | عقارات / إدارة أملاك / وساطة |
 
-A video ad for a property goes to Studio because the deliverable is a video. A marketing campaign about property goes to Marketer. A generic «أبي موقع» with no domain is rejected in Arabic. v0 does not invent a website generator.
+A video ad for a property goes to Studio because the deliverable is a video. A marketing campaign about property goes to Marketeer. A generic «أبي موقع» with no chosen project is rejected in Arabic. v0 does not invent a website generator.
 
 ### Service contract
 
@@ -96,10 +118,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Try:
 
-- موقع + «وساطة شقة في جدة» → أبيت، حالة تجريبي
-- فيديو without extra text → الاستوديو
-- «حملة تسويق لافتتاح» → المسوّق
-- موقع + «أبي موقع» → Arabic error, no job
+- «وساطة شقة في جدة» → أبيت، حالة تجريبي، with the Abeet explorer link in the thread
+- فيديو with no extra text → استوديو فيديو
+- «حملة تسويق لافتتاح» → ماركتير
+- «أبي موقع» with no project chip → Arabic error and retry inside the chat
 
 `npm run build` builds the web app after the orchestrator typecheck.
 

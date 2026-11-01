@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { configFromEnv, createOrchestrator, interpretIntent, routeIntent, type IntentInput, type OrchestratorConfig } from "../src/index";
+import { configFromEnv, createOrchestrator, interpretIntent, routeIntent, SERVICE_CATALOG, type IntentInput, type OrchestratorConfig } from "../src/index";
 
 function input(partial: Partial<IntentInput> & Pick<IntentInput, "freeText">): IntentInput {
   return {
     output: partial.output ?? null,
+    service: partial.service ?? null,
     freeText: partial.freeText,
     description: partial.description ?? "",
   };
@@ -44,7 +45,7 @@ describe("routeIntent", () => {
 
   it("returns an Arabic reason the screen can show", () => {
     const decision = routeIntent(interpretIntent(input({ output: "video", freeText: "" })));
-    assert.match(decision.reasonAr, /الاستوديو/);
+    assert.match(decision.reasonAr, /استوديو فيديو/);
   });
 });
 
@@ -98,6 +99,12 @@ describe("submitIntent routing outcomes", () => {
     assert.equal(result.ok, true);
     if (result.ok) {
       assert.equal(result.job.service, "abeet");
+      assert.equal(result.job.serviceLabelAr, "أبيت");
+      assert.equal(result.job.opportunityId, "2a3ff790-3aac-402e-9439-c3b1ade2d37a");
+      assert.equal(
+        result.job.opportunityUrl,
+        "https://experto.sa/ar/admin/opportunities/2a3ff790-3aac-402e-9439-c3b1ade2d37a",
+      );
       assert.equal(result.job.status, "stub");
       assert.notEqual(result.job.status, "ready");
       assert.equal(result.job.remote, false);
@@ -153,6 +160,66 @@ describe("submitIntent routing outcomes", () => {
       assert.match(result.error.messageAr, /إكسبرتو/);
     }
     assert.equal(called, false);
+  });
+
+  it("keeps an explicit Experto pin on the assistant stub", async () => {
+    let called = false;
+    const orchestrator = createOrchestrator(
+      testConfig({
+        fetchImpl: async () => {
+          called = true;
+          throw new Error("no");
+        },
+      }),
+    );
+    const result = await orchestrator.submitIntent(
+      { output: null, service: "experto", freeText: "وش تقدر تسوي", description: "" },
+      { cookieHeader: null },
+    );
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.job.service, "experto");
+      assert.equal(result.job.status, "stub");
+      assert.equal(result.job.opportunityId, "6d17a9b9-7780-4f8e-9e63-dddb0e70680d");
+      assert.equal(result.job.publicUrl, "https://experto.sa");
+      assert.equal(result.job.testflightUrl, "https://testflight.apple.com/join/RzTNGVph");
+      assert.match(result.job.messageAr, /تجريب/);
+    }
+    assert.equal(called, false);
+  });
+
+  it("lets a chosen project chip override a vague sentence", async () => {
+    const orchestrator = createOrchestrator(testConfig());
+    const result = await orchestrator.submitIntent(
+      { output: "website", service: "abeet", freeText: "أبي موقع", description: "" },
+      { cookieHeader: null },
+    );
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.job.service, "abeet");
+      assert.equal(result.job.status, "stub");
+      assert.match(result.job.reasonAr, /أبيت/);
+    }
+  });
+});
+
+describe("service catalog", () => {
+  it("lists the four Experto projects in launch order with explorer links", () => {
+    assert.deepEqual(
+      SERVICE_CATALOG.map((service) => service.id),
+      ["experto", "abeet", "studio", "marketer"],
+    );
+    assert.equal(SERVICE_CATALOG[2]?.labelAr, "استوديو فيديو");
+    assert.equal(SERVICE_CATALOG[2]?.publicUrl, "https://video.opps.dev");
+    assert.equal(
+      SERVICE_CATALOG[2]?.opportunityUrl,
+      "https://experto.sa/ar/admin/opportunities/18d6d182-fb15-457c-97ba-5f1ca0be9271",
+    );
+    assert.equal(SERVICE_CATALOG[3]?.labelAr, "ماركتير");
+    assert.equal(
+      SERVICE_CATALOG[3]?.opportunityUrl,
+      "https://experto.sa/ar/admin/opportunities/e8f44802-d2f5-4eb0-bb79-dea19eb54c85",
+    );
   });
 });
 

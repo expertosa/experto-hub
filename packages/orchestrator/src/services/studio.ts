@@ -1,18 +1,19 @@
 import { hasTerm } from "../text";
+import { serviceById } from "./catalog";
 import type { OrchestratorConfig } from "../types";
 import { parseBaseUrl, postServiceJob, pullServiceJob, type ServiceHttpMessages } from "./http";
 import { failedOutput, type ServiceAdapter, type ServiceSubmitInput, type ServiceSubmitOutput } from "./types";
 
 export type StudioKind = "video_ad" | "video";
 
-const STUB_MESSAGE = "وصلنا الطلب إلى وصلة الاستوديو التجريبية. التنفيذ الحقيقي مو متصل بعد.";
-const MISCONFIGURED = "عنوان الاستوديو (STUDIO_API_BASE_URL) غير صالح. ما أرسلنا الطلب.";
+const STUB_MESSAGE = "وصلنا الطلب إلى وصلة استوديو فيديو التجريبية. التنفيذ الحقيقي مو متصل بعد.";
+const MISCONFIGURED = "عنوان استوديو فيديو (STUDIO_API_BASE_URL) غير صالح. ما أرسلنا الطلب.";
 
 const HTTP_MESSAGES: ServiceHttpMessages = {
-  timeout: "انتهت مهلة الاتصال بالاستوديو. جرّب مرة ثانية.",
-  network: "تعذّر الاتصال بالاستوديو. جرّب مرة ثانية.",
-  http: (status) => `تعذّر الوصول إلى الاستوديو (HTTP ${status}). جرّب مرة ثانية.`,
-  badBody: "رد الاستوديو غير مفهوم. ما اعتبرنا الطلب ناجحًا.",
+  timeout: "انتهت مهلة الاتصال باستوديو فيديو. جرّب مرة ثانية.",
+  network: "تعذّر الاتصال باستوديو فيديو. جرّب مرة ثانية.",
+  http: (status) => `تعذّر الوصول إلى استوديو فيديو (HTTP ${status}). جرّب مرة ثانية.`,
+  badBody: "رد استوديو فيديو غير مفهوم. ما اعتبرنا الطلب ناجحًا.",
 };
 
 export function classifyStudioKind(text: string): StudioKind {
@@ -34,7 +35,7 @@ function stub(input: ServiceSubmitInput): ServiceSubmitOutput {
 export function createStudioAdapter(config: OrchestratorConfig): ServiceAdapter {
   return {
     id: "studio",
-    labelAr: "الاستوديو",
+    labelAr: serviceById("studio").labelAr,
     async submit(input) {
       const base = parseBaseUrl(config.studioBaseUrl);
       if (base.kind === "invalid") return failedOutput(MISCONFIGURED, "misconfigured");

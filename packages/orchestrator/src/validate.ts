@@ -1,4 +1,4 @@
-import { OUTPUTS, type IntentInput, type OutputKind, type SubmitError } from "./types";
+import { OUTPUTS, SERVICE_IDS, type IntentInput, type OutputKind, type ServiceId, type SubmitError } from "./types";
 
 type ValidationResult = { ok: true; value: IntentInput } | { ok: false; error: SubmitError };
 
@@ -15,6 +15,12 @@ function parseOutput(value: unknown): OutputKind | null | "invalid" {
   return OUTPUTS.includes(value as OutputKind) ? (value as OutputKind) : "invalid";
 }
 
+function parseService(value: unknown): ServiceId | null | "invalid" {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value !== "string") return "invalid";
+  return SERVICE_IDS.includes(value as ServiceId) ? (value as ServiceId) : "invalid";
+}
+
 function parseText(value: unknown): string | null {
   if (value === undefined || value === null) return "";
   return typeof value === "string" ? value : null;
@@ -29,6 +35,10 @@ export function validateIntentInput(raw: unknown): ValidationResult {
   if (output === "invalid") {
     return invalid("نوع المخرج غير معروف. اختر موقع أو فيديو أو تطبيق.");
   }
+  const service = parseService(body.service);
+  if (service === "invalid") {
+    return invalid("الخدمة غير معروفة.");
+  }
   const freeText = parseText(body.freeText);
   const description = parseText(body.description);
   if (freeText === null || description === null) {
@@ -40,5 +50,5 @@ export function validateIntentInput(raw: unknown): ValidationResult {
   if (!output && !freeText.trim() && !description.trim()) {
     return invalid("اكتب طلبك أو اختر نوع المخرج.");
   }
-  return { ok: true, value: { output, freeText, description } };
+  return { ok: true, value: { output, service, freeText, description } };
 }

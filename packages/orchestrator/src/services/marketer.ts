@@ -1,15 +1,16 @@
 import type { OrchestratorConfig } from "../types";
+import { serviceById } from "./catalog";
 import { parseBaseUrl, postServiceJob, pullServiceJob, type ServiceHttpMessages } from "./http";
 import { failedOutput, type ServiceAdapter, type ServiceSubmitInput, type ServiceSubmitOutput } from "./types";
 
-const STUB_MESSAGE = "وصلنا الطلب إلى وصلة المسوّق التجريبية. التنفيذ الحقيقي مو متصل بعد.";
-const MISCONFIGURED = "عنوان المسوّق (MARKETER_API_BASE_URL) غير صالح. ما أرسلنا الطلب.";
+const STUB_MESSAGE = "وصلنا الطلب إلى وصلة ماركتير التجريبية. التنفيذ الحقيقي مو متصل بعد.";
+const MISCONFIGURED = "عنوان ماركتير (MARKETER_API_BASE_URL) غير صالح. ما أرسلنا الطلب.";
 
 const HTTP_MESSAGES: ServiceHttpMessages = {
-  timeout: "انتهت مهلة الاتصال بالمسوّق. جرّب مرة ثانية.",
-  network: "تعذّر الاتصال بالمسوّق. جرّب مرة ثانية.",
-  http: (status) => `تعذّر الوصول إلى المسوّق (HTTP ${status}). جرّب مرة ثانية.`,
-  badBody: "رد المسوّق غير مفهوم. ما اعتبرنا الطلب ناجحًا.",
+  timeout: "انتهت مهلة الاتصال بماركتير. جرّب مرة ثانية.",
+  network: "تعذّر الاتصال بماركتير. جرّب مرة ثانية.",
+  http: (status) => `تعذّر الوصول إلى ماركتير (HTTP ${status}). جرّب مرة ثانية.`,
+  badBody: "رد ماركتير غير مفهوم. ما اعتبرنا الطلب ناجحًا.",
 };
 
 function stub(input: ServiceSubmitInput): ServiceSubmitOutput {
@@ -26,7 +27,7 @@ function stub(input: ServiceSubmitInput): ServiceSubmitOutput {
 export function createMarketerAdapter(config: OrchestratorConfig): ServiceAdapter {
   return {
     id: "marketer",
-    labelAr: "المسوّق",
+    labelAr: serviceById("marketer").labelAr,
     async submit(input) {
       const base = parseBaseUrl(config.marketerBaseUrl);
       if (base.kind === "invalid") return failedOutput(MISCONFIGURED, "misconfigured");

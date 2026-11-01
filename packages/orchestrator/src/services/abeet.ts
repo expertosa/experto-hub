@@ -1,4 +1,5 @@
 import { hasTerm } from "../text";
+import { serviceById } from "./catalog";
 import type { ExpertoIdentity, OrchestratorConfig } from "../types";
 import { parseBaseUrl, postServiceJob, pullServiceJob, type ServiceHttpMessages } from "./http";
 import { failedOutput, type ServiceAdapter, type ServiceSubmitInput, type ServiceSubmitOutput } from "./types";
@@ -68,7 +69,7 @@ function stub(input: ServiceSubmitInput): ServiceSubmitOutput {
 export function createAbeetAdapter(config: OrchestratorConfig): ServiceAdapter {
   return {
     id: "abeet",
-    labelAr: "أبيت",
+    labelAr: serviceById("abeet").labelAr,
     async submit(input) {
       const base = parseBaseUrl(config.abeetBaseUrl);
       const kind = classifyAbeetKind(input.intent.text);

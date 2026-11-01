@@ -8,7 +8,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
   const job = await orchestrator.getJob(id);
 
   return (
-    <div className="layout preview-page">
+    <div className="preview-page">
       <section>
         <p className="eyebrow">معاينة</p>
         <h1>بطاقة الطلب</h1>
@@ -18,7 +18,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
         {job ? <JobCard job={job} linkPreview={false} /> : <p className="alert">ما لقينا هذا الطلب.</p>}
         <p>
           <a className="text-link" href="/">
-            ارجع للإدخال
+            ارجع للمحادثة
           </a>
         </p>
       </section>

@@ -7,11 +7,11 @@ export function Shell({ children }: { children: ReactNode }) {
         <a className="brand" href="/">
           <span>إكسبرتو</span>
           <span className="brand-sep" aria-hidden="true" />
-          <span className="brand-en">Intent Hub</span>
+          <h1>قل وش تبي</h1>
         </a>
       </header>
-      <main>{children}</main>
-      <footer className="foot">نسخة v0 · الربط تجريبي إلى أن تتصل الخدمات · بدون نشر</footer>
+      <main className="chat-main">{children}</main>
+      <footer className="foot">نسخة تجريبية · بدون نشر</footer>
     </div>
   );
 }
