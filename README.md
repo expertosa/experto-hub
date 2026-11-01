@@ -8,7 +8,7 @@ v0 is a local MVP. Do not merge it to production, publish it, or deploy it until
 
 ## What v0 does
 
-1. The screen is an Arabic RTL chat, in the shape of the Experto assistant: a thread, quick chips, and a composer stuck to the bottom.
+1. The screen follows the Experto app home (Home2VC): white RTL page, spiral mark, «كيف يمكنني مساعدتك اليوم؟», a capsule field, chips under it, and a visual tab bar. Replies, when they exist, use the in-thread bubble colors inside that home.
 2. The person picks an output (موقع، فيديو، تطبيق) or one of the real projects, and writes a request plus an optional short description.
 3. The browser posts that to the Next.js server. No service key is ever sent to the browser.
 4. The orchestrator reads the intent, chooses one service, and returns a hub job id, the service job id, a status, and either a preview or an Arabic error inside the thread.
