@@ -1,0 +1,18 @@
+{
+  "name": "experto-hub",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @experto/web",
+    "build": "npm run typecheck -w @experto/orchestrator && npm run build -w @experto/web",
+    "typecheck": "npm run typecheck -w @experto/orchestrator && npm run typecheck -w @experto/web",
+    "test": "npm run test -w @experto/orchestrator",
+    "start": "npm run start -w @experto/web"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
