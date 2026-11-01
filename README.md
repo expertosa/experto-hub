@@ -35,7 +35,7 @@ Owner removed Abeet from Intent Hub on 2026-11-02.
 
 ### Projects
 
-Each service stores `id`, `labelAr`, `opportunityId`, `opportunityUrl`, and an optional `publicUrl`. The chat shows the Opportunity Explorer URL when a chip is opened and again when a job is routed.
+Each service stores `id`, `labelAr`, `opportunityId`, `opportunityUrl`, and an optional `publicUrl`. The home chips, from the right, are حسابات (Experto assistant), فيديو (Studio), تسويق (Marketeer), and المزيد (موقع and تطبيق only). Opening a chip shows that service's Opportunity Explorer URL.
 
 | Service | Arabic | Opportunity Explorer | Public |
 | --- | --- | --- | --- |

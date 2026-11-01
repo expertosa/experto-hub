@@ -204,11 +204,14 @@ export function IntentScreen() {
           </button>
         </div>
         <div className="chips" role="group" aria-label="الخدمات">
-          <button type="button" className="chip" aria-pressed={service === "marketer"} onClick={() => chooseService("marketer")}>
-            تسويق
+          <button type="button" className="chip" aria-pressed={service === "experto"} onClick={() => chooseService("experto")}>
+            حسابات
           </button>
           <button type="button" className="chip" aria-pressed={service === "studio"} onClick={() => chooseService("studio")}>
             فيديو
+          </button>
+          <button type="button" className="chip" aria-pressed={service === "marketer"} onClick={() => chooseService("marketer")}>
+            تسويق
           </button>
           <button type="button" className="chip" aria-pressed={moreOpen} onClick={() => setMoreOpen((open) => !open)}>
             المزيد
@@ -231,9 +234,6 @@ export function IntentScreen() {
               onClick={() => setOutput((current) => (current === "app" ? null : "app"))}
             >
               تطبيق
-            </button>
-            <button type="button" className="chip" aria-pressed={service === "experto"} onClick={() => chooseService("experto")}>
-              إكسبرتو
             </button>
           </div>
         ) : null}
