@@ -1,0 +1,33 @@
+import { serviceById } from "./services/catalog";
+import type { InterpretedIntent, RouteDecision, ServiceId } from "./types";
+
+/**
+ * One service per request.
+ * An explicit chip wins. Otherwise: video → Studio, campaign → Marketeer.
+ * A generic website or app with no domain signal is not routed — v0 does not invent a builder.
+ */
+export function routeIntent(intent: InterpretedIntent, pinned: ServiceId | null = null): RouteDecision {
+  if (pinned) {
+    const label = serviceById(pinned).labelAr;
+    return {
+      service: pinned,
+      reasonAr: pinned === "experto" ? "توجيه: الطلب عند مساعد إكسبرتو." : `توجيه: اخترت ${label}.`,
+    };
+  }
+  if (intent.signals.video) {
+    return {
+      service: "studio",
+      reasonAr: "توجيه: الطلب فيديو، واستوديو فيديو هو الخدمة.",
+    };
+  }
+  if (intent.signals.marketing) {
+    return {
+      service: "marketer",
+      reasonAr: "توجيه: الطلب حملة تسويق، وماركتير هو الخدمة.",
+    };
+  }
+  return {
+    service: null,
+    reasonAr: "ما قدرنا نحدد الخدمة. وضّح إذا الطلب فيديو (استوديو فيديو) أو حملة (ماركتير).",
+  };
+}
